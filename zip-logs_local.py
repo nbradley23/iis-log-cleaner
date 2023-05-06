@@ -1,10 +1,12 @@
 import os
 import time
 import zipfile
+import re
 from datetime import datetime
 
 total_deleted = 0
 total_zipped = 0
+total_skipped = 0
 
 def zip_logs():
 
@@ -12,6 +14,8 @@ def zip_logs():
     total_deleted = 0
     global total_zipped
     total_zipped = 0
+    global total_skipped
+    total_skipped = 0
 
     while True:
         path = input('\nPLEASE ENTER FULL FILE PATH CONTAINING LOGS TO BE ZIPPED (EXAMPLE: F:\\logfiles or F:\\logfiles\\W3SVC8): ').lower()
@@ -30,12 +34,17 @@ def zip_logs():
         for root, dirs, files in os.walk(path):
             for file in files:
                 file_path = os.path.join(root, file)
-                #Converting date in filename to date usable to compare with current time 
-                log_create_date = '20' + file[4:6] + '-' + file[6:8] + '-' + file[8:10]
-                create_date_converted =  int(datetime.strptime(log_create_date, '%Y-%m-%d').timestamp())
-                #Check if file is old enough to be deleted
-                if current_time - create_date_converted > days_back_to_delete*24*60*60:
-                    old_file_list.append(file_path)
+                if re.search('u_ex[0-9]+\.log', file_path.split('\\')[-1]):
+                    #Converting date in filename to date usable to compare with current time 
+                    log_create_date = '20' + file[4:6] + '-' + file[6:8] + '-' + file[8:10]
+                    create_date_converted =  int(datetime.strptime(log_create_date, '%Y-%m-%d').timestamp())
+                    #Check if file is old enough to be deleted
+                    if current_time - create_date_converted > days_back_to_delete*24*60*60:
+                        old_file_list.append(file_path)
+                else:
+                    print(f'DELETE OPERATION SKIPPED, NOT AN IIS LOG: {file_path} ')
+                    global total_skipped
+                    total_skipped +=1
         return old_file_list
     
     def delete_old_files (files_to_deleted):
@@ -51,12 +60,15 @@ def zip_logs():
         for root, dirs, files in os.walk(path):
             for file in files:
                 file_path = os.path.join(root, file)
-                #Converting date in filename to date usable to compare with current time 
-                log_create_date = '20' + file[4:6] + '-' + file[6:8] + '-' + file[8:10]
-                create_date_converted =  int(datetime.strptime(log_create_date, '%Y-%m-%d').timestamp())
-                #Check if file is older than 1 day and if so add to zip file list
-                if current_time - create_date_converted > 24*60*60 and file_path.split('.')[-1] != 'zip':
-                    zip_file_list.append(file_path)
+                if re.search('u_ex[0-9]+\.log', file_path.split('\\')[-1]):
+                    #Converting date in filename to date usable to compare with current time 
+                    log_create_date = '20' + file[4:6] + '-' + file[6:8] + '-' + file[8:10]
+                    create_date_converted =  int(datetime.strptime(log_create_date, '%Y-%m-%d').timestamp())
+                    #Check if file is older than 1 day and if so add to zip file list
+                    if current_time - create_date_converted > 24*60*60 and file_path.split('.')[-1] != 'zip':
+                        zip_file_list.append(file_path)
+                else:
+                    print(f'ZIP OPERATION SKIPPED, NOT AN IIS LOG: {file_path} ')
         return zip_file_list
 
     def zip_files_remove_original(files_to_zip):
@@ -79,8 +91,9 @@ def zip_logs():
     zip_file_list = get_files_to_zip_recursively(path)
     zip_files_remove_original(zip_file_list)
 
-    print(f'\n========== TOTAL FILES DELETED: {total_deleted} ==========\n')
-    print(f'========== TOTAL FILES ZIPPED: {total_zipped} ==========\n')
+    print(f'''\n    ========== TOTAL FILES DELETED: {total_deleted} ==========
+    ========== TOTAL FILES ZIPPED: {total_zipped} ==========
+    ========== TOTAL FILES SKIPPED: {total_skipped} ==========\n''')
 
 def run_again():
     while True:
@@ -92,12 +105,24 @@ def run_again():
 
 
 
-print('\n==================================== IIS LOG CLEANER & ZIPPER ====================================\n')
-print('***SCRIPT WILL PERMENATELY DELETE ANY LOGS THAT HAVE A CREATION DATE OLDER THAN THE NUMBER OF DAYS YOU SPECIFY***\n')
-print('***SCRIPT WILL THEN ZIP ANY LOGS THAT WERE CREATED MORE THAN 1 DAY AGO***\n')
-print('***SCRIPT WORKS RECURSIVELY SO YOU CAN USE THE TOP LEVEL LOGFILES FOLDER (EX. F:\logfiles) AND EACH SUBFOLDER WILL BE CLEANED*** \n\n***YOU CAN ALSO SPECIFY ONE SPECIFIC SITES FOLDER (EX. F:\logfiles\W3SVC8) AND IT WILL ONLY CLEAN THAT FOLDER***\n')
-print('***PLEASE ENSURE THE DESIRED PATH IS CORRECT***\n')
-print('***PRESS CTRL+C AT ANYTIME TO EXIT SCRIPT***\n')
+print("""
+==================================== IIS LOG CLEANER & ZIPPER ====================================
+
+**SCRIPT FUNCTIONALITY**
+- Permanently deletes logs older than the specified number of days.
+- Zips logs created more than 1 day ago.
+- Works recursively to clean subfolders within the specified path.
+- Can target a specific site folder for cleaning.
+
+**USAGE**
+- Use the top-level logfiles folder (e.g., F:\logfiles) to clean all subfolders.
+- Specify a specific site folder (e.g., F:\logfiles\W3SVC8) to clean only that folder.
+
+**IMPORTANT**
+- Will only work Windows IIS logs
+- Ensure the desired path is correct before running the script.
+- Press Ctrl+C at any time to exit the script.
+""")
 
 while True:
     confirmation = input("I UNDERSTAND (YES/NO): ").lower()
