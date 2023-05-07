@@ -127,7 +127,10 @@ def run_again():
 
 
 print("""
-==================================== IIS LOG CLEANER & ZIPPER ====================================
+**************************************************************************************************
+                                     IIS LOG CLEANER & ZIPPER 
+                                         By: Nick Bradley       
+**************************************************************************************************
 
 **SCRIPT FUNCTIONALITY**
 - Permanently deletes logs older than the user-specified number of days.
