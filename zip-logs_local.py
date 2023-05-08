@@ -54,6 +54,7 @@ def zip_logs():
                     if current_time - create_date_converted > days_back_to_delete*24*60*60:
                         old_file_list.append(file_path)
                 else:
+                    # Checks if skipped file is .zip then adds to skipped list if not
                     if file_path.split('.')[-1] != 'zip':
                         skipped_file_list.append(file_path)
                         global total_skipped
