@@ -1,0 +1,4 @@
+# iis-log-cleaner
+Command line program that accepts a file path in which the program will recursively navigate through and zip any IIS log files older than one day and will permanently delete any IIS log files older than the user-specified number of days inputted by the user during the program's initial steps.
+To prevent accidental deletion of non-log files, the program makes use of regular expressions to ensure each file it zips/deletes matches the standard IIS log naming convention. If the file doesn't match the expression, it's skipped.
+After the program completes the zipping and deletion of files, it will output the number of files zipped, deleted, and skipped. It will then ask the user if they'd like to run the program again on a different file path. If "yes" is typed the file path input is shown. If "no" is selected the program closes.
